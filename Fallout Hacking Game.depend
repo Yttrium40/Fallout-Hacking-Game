@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1517153129 source:c:\users\field\documents\important stuff\programming\c++ projects\fallout hacking game\main.cpp
+	<iostream>
+	<string>
+	<vector>
+	<fstream>
+	<random>
+
