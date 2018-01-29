@@ -3,11 +3,12 @@
 #include <vector>
 #include <fstream>
 #include <random>
+#include <chrono>
 
 int getDifficulty()
 {
     int difficulty;
-    while(true)
+    while (true)
     {
         std::cin >> difficulty;
         if(std::cin.fail())
@@ -24,7 +25,7 @@ std::string getWordGuess()
 {
     std::string guess;
     std::cin >> guess;
-    for(char &c : guess)
+    for (char &c : guess)
     {
         c = std::toupper(c);
     }
@@ -34,9 +35,9 @@ std::string getWordGuess()
 int getNumberCorrect(std::string word, std::string guess)
 {
     int correctCount{0};
-    for(int i = 0; i < word.length(); ++i)
+    for (int i = 0; i < word.length(); ++i)
     {
-        if(word[i] == guess[i]){++correctCount;}
+        if (word[i] == guess[i]) { ++correctCount; }
     }
     return correctCount;
 }
@@ -50,21 +51,21 @@ void populateOptions(std::vector<std::string> &options, int numberOptions, int w
     randomChoices.reserve(100);
 
     std::string line;
-    while(!ifs.eof())
+    while (!ifs.eof())
     {
         std::getline(ifs, line);
-        if(line.length() == wordLength)
+        if (line.length() == wordLength)
         {
             randomChoices.push_back(line);
         }
     }
-    std::random_device seeder;
-    std::mt19937 rng(seeder());
+
+    std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<> dis(0, randomChoices.size() - 1);
-    while(options.size() != numberOptions)
+    while (options.size() != numberOptions)
     {
-        int randomNumber{dis(rng)};
-        if(randomChoices[randomNumber] != "")
+        int randomNumber{dis(rng)}; // TODO make this work
+        if (randomChoices[randomNumber] != "")
         {
             options.push_back(randomChoices[randomNumber]);
             randomChoices[randomNumber] = "";
@@ -76,7 +77,7 @@ void playGame(int difficulty)
 {
     std::cout << "Difficulty is at: " << difficulty << '\n';
     int wordLength;
-    switch(difficulty)
+    switch (difficulty)
     {
         case 1: wordLength = 3; break;
         case 2: wordLength = 4; break;
@@ -90,14 +91,13 @@ void playGame(int difficulty)
     options.reserve(numberOptions);
     populateOptions(options, numberOptions, wordLength);
 
-    std::random_device seeder;
-    std::mt19937 rng(seeder());
+    std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<> dis(0, options.size() - 1);
     int randomNumber{dis(rng)};
 
-    for(std::string &word : options)
+    for (std::string &word : options)
     {
-        for(char &c : word)
+        for (char &c : word)
         {
             c = std::toupper(c);
         }
@@ -106,7 +106,7 @@ void playGame(int difficulty)
 
     std::string answer{options[randomNumber]};
     int guessCount{4};
-    while(guessCount != 0)
+    while (guessCount != 0)
     {
         std::cout << "Enter your guess (" << guessCount << " left): ";
         std::string guess{getWordGuess()};
@@ -116,7 +116,7 @@ void playGame(int difficulty)
         int numberCorrect{getNumberCorrect(answer, guess)};
         std::cout << numberCorrect << '/' << wordLength << " correct\n";
 
-        if(numberCorrect == wordLength)
+        if (numberCorrect == wordLength)
         {
             std::cout << "You win!\n";
             return;
@@ -128,8 +128,20 @@ void playGame(int difficulty)
 
 int main()
 {
-    std::cout << "Enter difficulty 1-5 (1 easiest, 5 hardest): ";
-    playGame(getDifficulty());
+    bool continueGame{true};
+    while (continueGame)
+    {
+        std::cout << "Enter difficulty 1-5 (1 easiest, 5 hardest): ";
+        playGame(getDifficulty());
+        while (true)
+        {
+            std::cout << "Do you want to continue (y/n): ";
+            char ynInput;
+            std::cin >> ynInput;
+            if (ynInput == 'y') { break; }
+            if (ynInput == 'n') { continueGame = false; break; }
+        }
+    }
 
     return 0;
 }
