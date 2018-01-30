@@ -5,23 +5,23 @@
 #include <random>
 #include <chrono>
 
-int getDifficulty()
+int getWordLength()
 {
-    int difficulty;
+    int wordLength;
     while (true)
     {
-        std::cin >> difficulty;
-        if(std::cin.fail())
+        std::cin >> wordLength;
+        if (std::cin.fail())
         {
             std::cin.clear();
             std::cin.ignore(100, '\n');
         }
         std::cin.ignore(100, '\n');
-        return difficulty;
+        return wordLength;
     }
 }
 
-std::string getWordGuess()
+std::string getWordGuess(const std::vector<std::string> &options)
 {
     std::string guess;
     std::cin >> guess;
@@ -29,6 +29,12 @@ std::string getWordGuess()
     {
         c = std::toupper(c);
     }
+    bool goodInput = false;
+    for (const std::string &str : options)
+    {
+        if (str == guess) { goodInput = true; break; }
+    }
+    if (!goodInput) { return ""; }
     return guess;
 }
 
@@ -73,18 +79,9 @@ void populateOptions(std::vector<std::string> &options, int numberOptions, int w
     }
 }
 
-void playGame(int difficulty)
+void playGame(int wordLength)
 {
-    std::cout << "Difficulty is at: " << difficulty << '\n';
-    int wordLength;
-    switch (difficulty)
-    {
-        case 1: wordLength = 3; break;
-        case 2: wordLength = 4; break;
-        case 3: wordLength = 5; break;
-        case 4: wordLength = 6; break;
-        case 5: wordLength = 7; break;
-    }
+    std::cout << "Difficulty is at: " << wordLength <<  " words" << '\n';
 
     int numberOptions{10};
     std::vector<std::string> options;
@@ -108,8 +105,12 @@ void playGame(int difficulty)
     int guessCount{4};
     while (guessCount != 0)
     {
-        std::cout << "Enter your guess (" << guessCount << " left): ";
-        std::string guess{getWordGuess()};
+        std::string guess{""};
+        while (guess.empty())
+        {
+            std::cout << "Enter your guess (" << guessCount << " left): ";
+            guess = getWordGuess(options);
+        }
         std::cout << guess << '\n';
         --guessCount;
 
@@ -131,8 +132,8 @@ int main()
     bool continueGame{true};
     while (continueGame)
     {
-        std::cout << "Enter difficulty 1-5 (1 easiest, 5 hardest): ";
-        playGame(getDifficulty());
+        std::cout << "Enter word length: ";
+        playGame(getWordLength());
         while (true)
         {
             std::cout << "Do you want to continue (y/n): ";
