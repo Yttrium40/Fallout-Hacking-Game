@@ -5,6 +5,8 @@
 #include <random>
 #include <chrono>
 
+std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+
 int getWordLength()
 {
     int wordLength;
@@ -40,7 +42,7 @@ std::string getWordGuess(const std::vector<std::string> &options)
 
 int getNumberCorrect(std::string word, std::string guess)
 {
-    int correctCount{0};
+    int correctCount { 0 };
     for (int i = 0; i < word.length(); ++i)
     {
         if (word[i] == guess[i]) { ++correctCount; }
@@ -48,7 +50,7 @@ int getNumberCorrect(std::string word, std::string guess)
     return correctCount;
 }
 
-void populateOptions(std::vector<std::string> &options, int numberOptions, int wordLength)
+int populateOptions(std::vector<std::string> &options, int numberOptions, int wordLength)
 {
     std::ifstream ifs;
     ifs.open("dictionary.txt", std::ifstream::in);
@@ -66,16 +68,37 @@ void populateOptions(std::vector<std::string> &options, int numberOptions, int w
         }
     }
 
-    std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<> dis(0, randomChoices.size() - 1);
-    while (options.size() != numberOptions)
+    std::uniform_int_distribution<> disGuess(0, numberOptions - 1);
+
+    int answerIndex { disGuess(rng) };
+    while (true)
     {
-        int randomNumber{dis(rng)}; // TODO make this work
-        if (randomChoices[randomNumber] != "")
+        std::cerr << "LOOP ENTERED\n";
+        while (options.size() != numberOptions)
         {
-            options.push_back(randomChoices[randomNumber]);
-            randomChoices[randomNumber] = "";
+            int randomNumber{ dis(rng) };
+            if (randomChoices[randomNumber] != "")
+            {
+                options.push_back(randomChoices[randomNumber]);
+                randomChoices[randomNumber] = "";
+            }
         }
+        int sumCorrect { 0 };
+        int sumLetters { 0 };
+
+        for (std::string &str : options)
+        {
+            sumCorrect += getNumberCorrect(str, options[answerIndex]);
+            sumLetters += str.length();
+        }
+
+        if (static_cast<double>(sumCorrect) / sumLetters <= 0.2)
+        {
+            options.clear();
+            continue;
+        }
+        else { return answerIndex; }
     }
 }
 
@@ -83,14 +106,12 @@ void playGame(int wordLength)
 {
     std::cout << "Difficulty is at: " << wordLength <<  " words" << '\n';
 
-    int numberOptions{10};
+    int numberOptions { 10 };
     std::vector<std::string> options;
     options.reserve(numberOptions);
-    populateOptions(options, numberOptions, wordLength);
 
-    std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    std::uniform_int_distribution<> dis(0, options.size() - 1);
-    int randomNumber{dis(rng)};
+    int answerIndex { populateOptions(options, numberOptions, wordLength) };
+    std::cerr << "LOOP DONE\n";
 
     for (std::string &word : options)
     {
@@ -101,8 +122,8 @@ void playGame(int wordLength)
         std::cout << word << '\n';
     }
 
-    std::string answer{options[randomNumber]};
-    int guessCount{4};
+    std::string answer { options[answerIndex] };
+    int guessCount { 4 };
     while (guessCount != 0)
     {
         std::string guess{""};
@@ -129,7 +150,7 @@ void playGame(int wordLength)
 
 int main()
 {
-    bool continueGame{true};
+    bool continueGame { true };
     while (continueGame)
     {
         std::cout << "Enter word length: ";
